@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: echosens-demo-service
+  namespace: default
+spec:
+  hosts:
+    - "echosens-test-dev.chronwell.io"
+  gateways:
+    - dtx-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: echosens-demo-service.liver-healthy.svc.cluster.local
+            port:
+              number: 8000
