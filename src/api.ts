@@ -88,6 +88,32 @@ export function registerApi (server: FastifyInstance) {
             description: 'signature'
           }
         }
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            message: {
+              type: 'string'
+            }
+          }
+        },
+        400: {
+          type: 'object',
+          properties: {
+            message: {
+              type: 'string'
+            }
+          }
+        },
+        500: {
+          type: 'object',
+          properties: {
+            message: {
+              type: 'string'
+            }
+          }
+        }
       }
     }
   }, async (request: FastifyRequest<{ Body: Patient, Headers: PostPatientHeader }>, reply) => {

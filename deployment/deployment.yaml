@@ -18,7 +18,7 @@ spec:
         proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
     spec:
       containers:
-        - image: us-east4-docker.pkg.dev/chronwell-images/dtx/echosens-demo-service:0.0.3
+        - image: us-east4-docker.pkg.dev/chronwell-images/dtx/echosens-demo-service:0.0.7
           imagePullPolicy: IfNotPresent
           name: echosens-demo-service
           env:

@@ -13,9 +13,16 @@ const start = async () => {
   })
 
   try {
-    closeWithGrace({ delay: 500 }, async () => {
+    closeWithGrace({ delay: 500 }, async ({ err }) => {
       server.log.info('server closed')
+
+      if (typeof err !== 'undefined') {
+        server.log.error(err)
+        process.exit(1)
+      }
+
       await server.close()
+      process.exit(0)
     })
 
     await server.register(fastifyRawBody, {
@@ -39,4 +46,5 @@ try {
   await start()
 } catch (e) {
   console.log(e)
+  process.exit(1)
 }
