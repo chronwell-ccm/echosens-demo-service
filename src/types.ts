@@ -1,17 +1,18 @@
 export interface GetOrgsHeaders {
-  'x-echosens-api-key': string
+  'x-api-key': string
 }
 
 export interface GetOrgQueryString {
-  email: string
+  userEmail: string
 }
 
 export interface PostPatientHeader {
   'x-chronwell-signature': string
+  'x-api-key': string
 }
 
 export interface Patient {
-  orgId: string
+  organizationUid: string
   medicalRecordNumber: string
   createdAt: string
   updatedAt: string

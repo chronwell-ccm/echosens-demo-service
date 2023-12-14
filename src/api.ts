@@ -11,7 +11,7 @@ export function registerApi (server: FastifyInstance) {
     return await reply.code(200).send()
   })
 
-  server.get('/org', {
+  server.get('/organizations', {
     schema: {
       description: 'Get organization Id from email',
       security: [{ apiKey: [] }],
@@ -28,10 +28,13 @@ export function registerApi (server: FastifyInstance) {
         200: {
           type: 'object',
           properties: {
-            orgId: {
+            organizationUid: {
               type: 'string'
             },
-            email: {
+            userEmail: {
+              type: 'string'
+            },
+            organizationName: {
               type: 'string'
             }
           }
@@ -55,23 +58,23 @@ export function registerApi (server: FastifyInstance) {
       }
     }
   }, async (request: FastifyRequest<{ Querystring: GetOrgQueryString, Headers: GetOrgsHeaders }>, reply) => {
-    const email = request.query.email ?? ''
-    const apiKey = request.headers['x-echosens-api-key'] ?? ''
+    const userEmail = request.query.userEmail ?? ''
+    const apiKey = request.headers['x-api-key'] ?? ''
 
     if (apiKey !== process.env.API_KEY) {
-      return await reply.code(401).send({ message: 'x-echosens-api-key is required' })
+      return await reply.code(401).send({ message: 'x-api-key is required' })
     }
 
-    if (email === '') {
+    if (userEmail === '') {
       return await reply.code(400).send({ message: 'email is required' })
     }
 
-    const seed = cyrb128(email)
+    const seed = cyrb128(userEmail)
     const rand = mulberry32(seed[0])
 
-    const orgId = Math.round(rand() * 1000000000)
+    const organizationUid = Math.round(rand() * 1000000000)
 
-    return await reply.code(200).send({ orgId, email })
+    return await reply.code(200).send({ organizationUid, userEmail, organizationName: 'test organization' })
   })
 
   server.post('/patient', {
@@ -118,6 +121,11 @@ export function registerApi (server: FastifyInstance) {
     }
   }, async (request: FastifyRequest<{ Body: Patient, Headers: PostPatientHeader }>, reply) => {
     const receivedSignature = request.headers['x-chronwell-signature'] ?? ''
+    const apiKey = request.headers['x-api-key'] ?? ''
+
+    if (apiKey !== process.env.WEBHOOK_SECRET) {
+      return await reply.code(401).send({ message: 'x-api-key is required' })
+    }
 
     try {
       if (receivedSignature !== '') {
@@ -133,7 +141,7 @@ export function registerApi (server: FastifyInstance) {
 
         if (isValidSign) {
           const patient = request.body
-          server.log.info(`OrganizationId ${patient.orgId}`)
+          server.log.info(`OrganizationId ${patient.organizationUid}`)
           server.log.info(`Patient ${patient.firstName} ${patient.lastName}`)
           server.log.info(`Score ${patient.fib4Score} Risk ${patient.fib4Risk}`)
           return await reply.code(200).send({ message: 'ok' })
