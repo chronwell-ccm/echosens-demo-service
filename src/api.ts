@@ -1,5 +1,4 @@
 import { type FastifyRequest, type FastifyInstance } from 'fastify'
-import * as crypto from 'crypto'
 
 import { cyrb128, mulberry32 } from './utils.js'
 import type { GetOrgQueryString, GetOrgsHeaders, Patient, PostPatientHeader } from './types.js'
@@ -120,7 +119,6 @@ export function registerApi (server: FastifyInstance) {
       }
     }
   }, async (request: FastifyRequest<{ Body: Patient, Headers: PostPatientHeader }>, reply) => {
-    const receivedSignature = request.headers['x-chronwell-signature'] ?? ''
     const apiKey = request.headers['x-api-key'] ?? ''
 
     if (apiKey !== process.env.WEBHOOK_SECRET) {
@@ -128,30 +126,14 @@ export function registerApi (server: FastifyInstance) {
     }
 
     try {
-      if (receivedSignature !== '') {
-        const body = Buffer.from(request.rawBody ?? '')
-
-        const signature = crypto
-          .createHmac('sha1', process.env.WEBHOOK_SECRET ?? 'secret')
-          .update(body)
-          .digest('hex')
-        const trusted = Buffer.from(`sha1=${signature}`, 'ascii')
-        const untrusted = Buffer.from(receivedSignature, 'ascii')
-        const isValidSign = crypto.timingSafeEqual(trusted, untrusted)
-
-        if (isValidSign) {
-          const patient = request.body
-          server.log.info(`OrganizationId ${patient.organizationUid}`)
-          server.log.info(`Patient ${patient.firstName} ${patient.lastName}`)
-          server.log.info(`Score ${patient.fib4Score} Risk ${patient.fib4Risk}`)
-          return await reply.code(200).send({ message: 'ok' })
-        }
-      }
+      const patient = request.body
+      server.log.info(`OrganizationId ${patient.organizationUid}`)
+      server.log.info(`Patient ${patient.firstName} ${patient.lastName}`)
+      server.log.info(`Score ${patient.fib4Score} Risk ${patient.fib4Risk}`)
+      return await reply.code(200).send({ message: 'ok' })
     } catch (err) {
       server.log.error(err)
       return await reply.code(500).send({ message: 'error' })
     }
-
-    return await reply.code(400).send({ message: 'error' })
   })
 }
